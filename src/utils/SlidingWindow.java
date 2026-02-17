@@ -4,13 +4,11 @@ import java.util.*;
 
 /**
  * Sliding Window utilities for trend detection on sales / stock data.
- * Uses Deque-based O(n) max/min queries over a fixed window.
  */
 public class SlidingWindow {
 
     public static final int DEFAULT_WINDOW = 7;
 
-    /** Returns the average sales per window position */
     public static double[] movingAverage(int[] data, int window) {
         if (data == null || data.length < window) return new double[0];
         double[] result = new double[data.length - window + 1];
@@ -24,13 +22,6 @@ public class SlidingWindow {
         return result;
     }
 
-    /**
-     * Detects demand trend for each window position.
-     * @param data     sales_30d array for all products
-     * @param window   sliding window size (default 7)
-     * @param highMark avg threshold above which trend = HIGH_DEMAND
-     * @param lowMark  avg threshold below which trend = LOW_DEMAND
-     */
     public static List<TrendResult> detectTrends(int[] data, int window, double highMark, double lowMark) {
         List<TrendResult> trends = new ArrayList<>();
         double[] avgs = movingAverage(data, window);
@@ -43,7 +34,6 @@ public class SlidingWindow {
         return trends;
     }
 
-    /** O(n) sliding-window maximum using a monotone deque */
     public static int[] slidingMax(int[] data, int window) {
         if (data == null || data.length < window) return new int[0];
         int[] result = new int[data.length - window + 1];
@@ -60,11 +50,19 @@ public class SlidingWindow {
     }
 
     public static class TrendResult {
-        public final int    windowIndex;
-        public final double average;
-        public final String trend;
+        private final int    windowIndex;
+        private final double average;
+        private final String trend;
+
         TrendResult(int idx, double avg, String trend) {
-            this.windowIndex = idx; this.average = avg; this.trend = trend;
+            this.windowIndex = idx;
+            this.average     = avg;
+            this.trend       = trend;
         }
+
+        // FIX: JSTL EL needs getters — public fields alone don't work
+        public int    getWindowIndex() { return windowIndex; }
+        public double getAverage()     { return average; }
+        public String getTrend()       { return trend; }
     }
 }
