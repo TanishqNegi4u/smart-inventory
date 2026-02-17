@@ -1,3 +1,4 @@
+
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt"  prefix="fmt" %>
@@ -13,7 +14,6 @@
     <meta charset="UTF-8">
     <title>Analytics — Smart Inventory Pro</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -125,6 +125,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     const catLabels = [<c:forEach var="e" items="${salesByCategory}" varStatus="s">'${e.key}'<c:if test="${!s.last}">,</c:if></c:forEach>];
     const catSales  = [<c:forEach var="e" items="${salesByCategory}" varStatus="s">${e.value}<c:if test="${!s.last}">,</c:if></c:forEach>];
