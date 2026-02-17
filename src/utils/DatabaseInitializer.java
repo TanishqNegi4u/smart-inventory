@@ -1,6 +1,7 @@
 package utils;
 
 import java.sql.*;
+import org.mindrot.jbcrypt.BCrypt;
 
 public class DatabaseInitializer {
 
@@ -35,15 +36,17 @@ public class DatabaseInitializer {
             );
             System.out.println(">>> products table ready.");
 
-            // Insert default admin user if not exists
-            // Password hash = admin123
-            String adminHash = "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy";
+            // Generate fresh hash at runtime and force update
+            String adminHash = BCrypt.hashpw("admin123", BCrypt.gensalt());
+            System.out.println(">>> Generated hash: " + adminHash);
+
             stmt.executeUpdate(
-                "INSERT IGNORE INTO users (username, password, role) VALUES " +
+                "INSERT INTO users (username, password, role) VALUES " +
                 "('admin', '" + adminHash + "', 'ADMIN')," +
-                "('manager', '" + adminHash + "', 'MANAGER')"
+                "('manager', '" + adminHash + "', 'MANAGER') " +
+                "ON DUPLICATE KEY UPDATE password = VALUES(password)"
             );
-            System.out.println(">>> Default users inserted (if not already present).");
+            System.out.println(">>> Default users inserted/updated.");
 
             // Insert sample products if table is empty
             ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM products");
