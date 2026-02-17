@@ -2,13 +2,11 @@ package controllers;
 
 import utils.DatabaseConnection;
 import javax.servlet.*;
-import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import java.io.*;
 import java.sql.*;
 import org.mindrot.jbcrypt.BCrypt;
 
-@WebServlet({"/login", "/logout"})
 @SuppressWarnings("serial")
 public class AuthServlet extends HttpServlet {
 
