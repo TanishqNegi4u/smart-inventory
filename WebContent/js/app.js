@@ -31,6 +31,11 @@ class FenwickTree {
     rangeQuery(l, r) { return this.query(r) - (l > 0 ? this.query(l - 1) : 0); }
 }
 
+// ── Set Chart.js global dark defaults ───────────────────
+Chart.defaults.color          = '#94a3b8';
+Chart.defaults.borderColor    = 'rgba(255,255,255,0.05)';
+Chart.defaults.backgroundColor = 'rgba(255,255,255,0.04)';
+
 // ── Chart initialiser (called from JSP) ─────────────────
 function initStockChart(canvasId, labels, stocks, sales) {
     const ctx = document.getElementById(canvasId);
@@ -45,18 +50,21 @@ function initStockChart(canvasId, labels, stocks, sales) {
                     label: 'Stock',
                     data: stocks,
                     backgroundColor: stocks.map(s =>
-                        s < 10  ? 'rgba(220,53,69,.8)'  :
-                        s < 30  ? 'rgba(255,193,7,.8)'  :
-                                  'rgba(25,135,84,.8)'),
-                    borderRadius: 5,
+                        s < 10  ? 'rgba(239,68,68,0.75)'   :
+                        s < 50  ? 'rgba(245,158,11,0.75)'  :
+                                  'rgba(16,185,129,0.75)'),
+                    borderRadius: 6,
+                    borderSkipped: false,
                     yAxisID: 'y'
                 },
                 {
                     label: 'Sales (30d)',
                     data: sales,
                     type: 'line',
-                    borderColor: '#0d6efd',
-                    backgroundColor: 'rgba(13,110,253,.1)',
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59,130,246,0.08)',
+                    pointBackgroundColor: '#3b82f6',
+                    pointRadius: 3,
                     tension: 0.4,
                     fill: true,
                     yAxisID: 'y1'
@@ -66,12 +74,42 @@ function initStockChart(canvasId, labels, stocks, sales) {
         options: {
             responsive: true,
             interaction: { mode: 'index', intersect: false },
-            plugins: { legend: { position: 'top' } },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: { color: '#94a3b8', font: { size: 11 }, boxWidth: 12 }
+                },
+                tooltip: {
+                    backgroundColor: '#141b2b',
+                    borderColor: 'rgba(59,130,246,0.3)',
+                    borderWidth: 1,
+                    titleColor: '#e2e8f0',
+                    bodyColor: '#94a3b8'
+                }
+            },
             scales: {
-                x:  { ticks: { maxRotation: 45, font: { size: 10 } } },
-                y:  { beginAtZero: true, title: { display: true, text: 'Stock' } },
-                y1: { beginAtZero: true, position: 'right', title: { display: true, text: 'Sales' },
-                      grid: { drawOnChartArea: false } }
+                x: {
+                    ticks: {
+                        maxRotation: 45,
+                        font: { size: 9 },
+                        color: '#475569',
+                        maxTicksLimit: 8
+                    },
+                    grid: { color: 'rgba(255,255,255,0.04)' }
+                },
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Stock', color: '#64748b', font: { size: 10 } },
+                    ticks: { color: '#64748b', font: { size: 10 } },
+                    grid: { color: 'rgba(255,255,255,0.04)' }
+                },
+                y1: {
+                    beginAtZero: true,
+                    position: 'right',
+                    title: { display: true, text: 'Sales', color: '#64748b', font: { size: 10 } },
+                    ticks: { color: '#64748b', font: { size: 10 } },
+                    grid: { drawOnChartArea: false }
+                }
             }
         }
     });
