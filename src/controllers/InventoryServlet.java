@@ -83,9 +83,14 @@ public class InventoryServlet extends HttpServlet {
 
         // DSA - Segment Tree & Sliding Window
         int[] stocks = products.stream().mapToInt(Product::getStock).toArray();
-        int[] sales = products.stream().mapToInt(Product::getSales30d).toArray();
+        int[] sales  = products.stream().mapToInt(Product::getSales30d).toArray();
+
         SegmentTree segTree = new SegmentTree(stocks);
-        List<SlidingWindow.TrendResult> trends = SlidingWindow.analyze(sales, 3);
+
+        // FIX #1: SlidingWindow.analyze() takes a List<Integer>, not int[]
+        List<Integer> salesList = new ArrayList<>();
+        for (int s : sales) salesList.add(s);
+        List<SlidingWindow.TrendResult> trends = SlidingWindow.analyze(salesList, 3);
 
         // Low stock alerts
         List<String> alerts = new ArrayList<>();
@@ -146,10 +151,10 @@ public class InventoryServlet extends HttpServlet {
         try (Connection conn = DatabaseConnection.getConnection()) {
 
             if ("add".equals(action)) {
-                String name = req.getParameter("name");
+                String name     = req.getParameter("name");
                 String category = req.getParameter("category");
-                int stock = Integer.parseInt(req.getParameter("stock"));
-                double price = Double.parseDouble(req.getParameter("price"));
+                int    stock    = Integer.parseInt(req.getParameter("stock"));
+                double price    = Double.parseDouble(req.getParameter("price"));
 
                 PreparedStatement ps = conn.prepareStatement(
                     "INSERT INTO products (name, category, stock, price, sales_30d) VALUES (?,?,?,?,0)");
@@ -158,14 +163,16 @@ public class InventoryServlet extends HttpServlet {
                 ps.setInt(3, stock);
                 ps.setDouble(4, price);
                 ps.executeUpdate();
-                cache.clear();
+
+                // FIX #2: LRUCache has no clear() — rebuild cache by evicting all via put
+                cache = new LRUCache<>(8);
 
             } else if ("update".equals(action)) {
-                int id = Integer.parseInt(req.getParameter("id"));
-                String name = req.getParameter("name");
+                int    id       = Integer.parseInt(req.getParameter("id"));
+                String name     = req.getParameter("name");
                 String category = req.getParameter("category");
-                int stock = Integer.parseInt(req.getParameter("stock"));
-                double price = Double.parseDouble(req.getParameter("price"));
+                int    stock    = Integer.parseInt(req.getParameter("stock"));
+                double price    = Double.parseDouble(req.getParameter("price"));
 
                 PreparedStatement ps = conn.prepareStatement(
                     "UPDATE products SET name=?, category=?, stock=?, price=? WHERE id=?");
@@ -175,10 +182,12 @@ public class InventoryServlet extends HttpServlet {
                 ps.setDouble(4, price);
                 ps.setInt(5, id);
                 ps.executeUpdate();
-                cache.remove(id);
+
+                // FIX #3 & #4: LRUCache has no remove(int) — evict by overwriting with null
+                // then skip null values on read, or simply rebuild the cache
+                cache.put(id, null);
 
             } else if ("delete".equals(action)) {
-                // Role check — only ADMIN can delete
                 if (!"ADMIN".equals(role)) {
                     resp.sendRedirect(req.getContextPath() + "/inventory?error=unauthorized");
                     return;
@@ -188,7 +197,9 @@ public class InventoryServlet extends HttpServlet {
                     "DELETE FROM products WHERE id=?");
                 ps.setInt(1, id);
                 ps.executeUpdate();
-                cache.remove(id);
+
+                // FIX #3 & #4: same — overwrite with null to invalidate cache entry
+                cache.put(id, null);
             }
 
         } catch (SQLException e) {
