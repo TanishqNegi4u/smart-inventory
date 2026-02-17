@@ -14,7 +14,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard — Smart Inventory Pro</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -92,7 +91,7 @@
                                 <td>${p.sales30d}</td>
                                 <td>
                                     <button class="btn btn-sm btn-warning"
-                                        onclick="openEdit(${p.id},'${p.name}','${p.category}',${p.stock},${p.price})">Edit</button>
+                                        onclick="openEdit(${p.id},'${p.name}','${p.category}',${p.stock},${p.price},${p.sales30d})">Edit</button>
                                     <c:if test="${sessionScope.role == 'ADMIN'}">
                                     <form action="inventory" method="post" style="display:inline"
                                           onsubmit="return confirm('Delete ${p.name}?')">
@@ -172,6 +171,7 @@
                     <div class="mb-2"><label class="form-label">Price (₹) *</label>
                         <input type="number" name="price" class="form-control" step="0.01" min="0" placeholder="0.00" required></div>
                     <div class="mb-2"><label class="form-label">Sales Last 30 Days</label>
+                        <%-- FIX: name="sales30d" matches what servlet reads --%>
                         <input type="number" name="sales30d" class="form-control" min="0" placeholder="0"></div>
                 </div>
                 <div class="modal-footer">
@@ -203,6 +203,8 @@
                         <input type="number" name="stock" id="editStock" class="form-control" min="0" required></div>
                     <div class="mb-2"><label class="form-label">Price (₹)</label>
                         <input type="number" name="price" id="editPrice" class="form-control" step="0.01" min="0" required></div>
+                    <div class="mb-2"><label class="form-label">Sales Last 30 Days</label>
+                        <input type="number" name="sales30d" id="editSales30d" class="form-control" min="0"></div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -213,7 +215,9 @@
     </div>
 </div>
 
+<%-- FIX: Bootstrap JS FIRST, then chart.js, then app.js — order matters for modals --%>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="js/app.js"></script>
 <script>
     const labels = [<c:forEach var="p" items="${products}" varStatus="s">'${p.name}'<c:if test="${!s.last}">,</c:if></c:forEach>];
@@ -221,12 +225,13 @@
     const sales  = [<c:forEach var="p" items="${products}" varStatus="s">${p.sales30d}<c:if test="${!s.last}">,</c:if></c:forEach>];
     initStockChart('stockChart', labels, stocks, sales);
 
-    function openEdit(id, name, category, stock, price) {
-        document.getElementById('editId').value = id;
-        document.getElementById('editName').value = name;
+    function openEdit(id, name, category, stock, price, sales30d) {
+        document.getElementById('editId').value       = id;
+        document.getElementById('editName').value     = name;
         document.getElementById('editCategory').value = category;
-        document.getElementById('editStock').value = stock;
-        document.getElementById('editPrice').value = price;
+        document.getElementById('editStock').value    = stock;
+        document.getElementById('editPrice').value    = price;
+        document.getElementById('editSales30d').value = sales30d;
         new bootstrap.Modal(document.getElementById('editModal')).show();
     }
 </script>
