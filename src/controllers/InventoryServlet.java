@@ -3,13 +3,11 @@ package controllers;
 import utils.*;
 import models.*;
 import javax.servlet.*;
-import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import java.io.*;
 import java.sql.*;
 import java.util.*;
 
-@WebServlet("/inventory")
 @SuppressWarnings("serial")
 public class InventoryServlet extends HttpServlet {
 
