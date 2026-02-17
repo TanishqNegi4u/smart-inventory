@@ -1,76 +1,54 @@
 package utils;
 
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
+/**
+ * LRU Cache backed by LinkedHashMap.
+ * Supports get, put, remove, clear, size — all O(1).
+ */
 public class LRUCache<K, V> {
 
-    private class Node {
-        K key; V value; Node prev, next;
-        Node(K k, V v) { key = k; value = v; }
-    }
-
     private final int capacity;
-    private final Map<K, Node> cache = new HashMap<>();
-    private final Node head = new Node(null, null);
-    private final Node tail = new Node(null, null);
+    private final LinkedHashMap<K, V> map;
 
     public LRUCache(int capacity) {
         this.capacity = capacity;
-        head.next = tail;
-        tail.prev = head;
+        this.map = new LinkedHashMap<K, V>(capacity, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
+                return size() > capacity;
+            }
+        };
     }
 
-    /** O(1) get; returns null on miss */
-    public V get(K key) {
-        Node node = cache.get(key);
-        if (node == null) return null;
-        moveToFront(node);
-        return node.value;
+    /** Returns value for key, or null if not cached. Marks as recently used. */
+    public synchronized V get(K key) {
+        return map.getOrDefault(key, null);
     }
 
-    /** O(1) put; evicts LRU entry when over capacity */
-    public void put(K key, V value) {
-        Node node = cache.get(key);
-        if (node != null) {
-            node.value = value;
-            moveToFront(node);
-        } else {
-            Node newNode = new Node(key, value);
-            cache.put(key, newNode);
-            addToFront(newNode);
-            if (cache.size() > capacity) evictLRU();
-        }
+    /** Inserts or updates a key-value pair. Evicts LRU entry if over capacity. */
+    public synchronized void put(K key, V value) {
+        map.put(key, value);
     }
 
-    public void invalidate(K key) {
-        Node node = cache.remove(key);
-        if (node != null) removeNode(node);
+    /** Removes a specific key from the cache. */
+    public synchronized void remove(K key) {
+        map.remove(key);
     }
 
-    public int size()  { return cache.size(); }
-    public boolean containsKey(K key) { return cache.containsKey(key); }
-
-    // ── Doubly-linked list helpers ────────────────────────
-    private void addToFront(Node node) {
-        node.next       = head.next;
-        node.prev       = head;
-        head.next.prev  = node;
-        head.next       = node;
+    /** Clears all entries from the cache. */
+    public synchronized void clear() {
+        map.clear();
     }
 
-    private void removeNode(Node node) {
-        node.prev.next = node.next;
-        node.next.prev = node.prev;
+    /** Returns current number of cached entries. */
+    public synchronized int size() {
+        return map.size();
     }
 
-    private void moveToFront(Node node) {
-        removeNode(node);
-        addToFront(node);
-    }
-
-    private void evictLRU() {
-        Node last = tail.prev;
-        cache.remove(last.key);
-        removeNode(last);
+    /** Returns true if the key exists in cache. */
+    public synchronized boolean containsKey(K key) {
+        return map.containsKey(key);
     }
 }
