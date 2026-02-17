@@ -34,11 +34,11 @@ public class InventoryServlet extends HttpServlet {
         }
 
         // Search & Filter
-        String search = req.getParameter("search") != null ? req.getParameter("search").trim() : "";
+        String search         = req.getParameter("search")   != null ? req.getParameter("search").trim()   : "";
         String filterCategory = req.getParameter("category") != null ? req.getParameter("category").trim() : "";
 
-        List<Product> products = new ArrayList<>();
-        List<String> categories = new ArrayList<>();
+        List<Product> products   = new ArrayList<>();
+        List<String>  categories = new ArrayList<>();
 
         try (Connection conn = DatabaseConnection.getConnection()) {
 
@@ -48,20 +48,15 @@ public class InventoryServlet extends HttpServlet {
             while (catRs.next()) categories.add(catRs.getString("category"));
 
             // Build dynamic query
-            StringBuilder sql = new StringBuilder(
-                "SELECT * FROM products WHERE 1=1");
-            if (!search.isEmpty())
-                sql.append(" AND name LIKE ?");
-            if (!filterCategory.isEmpty())
-                sql.append(" AND category = ?");
+            StringBuilder sql = new StringBuilder("SELECT * FROM products WHERE 1=1");
+            if (!search.isEmpty())         sql.append(" AND name LIKE ?");
+            if (!filterCategory.isEmpty()) sql.append(" AND category = ?");
             sql.append(" ORDER BY sales_30d DESC");
 
             PreparedStatement ps = conn.prepareStatement(sql.toString());
             int idx = 1;
-            if (!search.isEmpty())
-                ps.setString(idx++, "%" + search + "%");
-            if (!filterCategory.isEmpty())
-                ps.setString(idx++, filterCategory);
+            if (!search.isEmpty())         ps.setString(idx++, "%" + search + "%");
+            if (!filterCategory.isEmpty()) ps.setString(idx++, filterCategory);
 
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -81,16 +76,15 @@ public class InventoryServlet extends HttpServlet {
             e.printStackTrace();
         }
 
-        // DSA - Segment Tree & Sliding Window
+        // DSA — Segment Tree & Sliding Window
         int[] stocks = products.stream().mapToInt(Product::getStock).toArray();
         int[] sales  = products.stream().mapToInt(Product::getSales30d).toArray();
 
         SegmentTree segTree = new SegmentTree(stocks);
 
-        // FIX #1: SlidingWindow.analyze() takes a List<Integer>, not int[]
-        List<Integer> salesList = new ArrayList<>();
-        for (int s : sales) salesList.add(s);
-        List<SlidingWindow.TrendResult> trends = SlidingWindow.analyze(salesList, 3);
+        // FIX: call detectTrends() — that is the actual method name in SlidingWindow.java
+        List<SlidingWindow.TrendResult> trends =
+            SlidingWindow.detectTrends(sales, 3, 100, 30);
 
         // Low stock alerts
         List<String> alerts = new ArrayList<>();
@@ -100,12 +94,12 @@ public class InventoryServlet extends HttpServlet {
             }
         }
 
-        req.setAttribute("products", products);
-        req.setAttribute("categories", categories);
-        req.setAttribute("trends", trends);
-        req.setAttribute("alerts", alerts);
-        req.setAttribute("cacheSize", cache.size());
-        req.setAttribute("search", search);
+        req.setAttribute("products",       products);
+        req.setAttribute("categories",     categories);
+        req.setAttribute("trends",         trends);
+        req.setAttribute("alerts",         alerts);
+        req.setAttribute("cacheSize",      cache.size());
+        req.setAttribute("search",         search);
         req.setAttribute("filterCategory", filterCategory);
         req.getRequestDispatcher("index.jsp").forward(req, resp);
     }
@@ -116,18 +110,18 @@ public class InventoryServlet extends HttpServlet {
         resp.setHeader("Content-Disposition", "attachment; filename=\"inventory.csv\"");
 
         try (Connection conn = DatabaseConnection.getConnection();
-             PrintWriter pw = resp.getWriter()) {
+             PrintWriter pw  = resp.getWriter()) {
 
             pw.println("ID,Name,Category,Stock,Price,Sales(30d)");
             ResultSet rs = conn.createStatement().executeQuery(
                 "SELECT * FROM products ORDER BY id");
             while (rs.next()) {
                 pw.println(
-                    rs.getInt("id") + "," +
+                    rs.getInt("id")          + "," +
                     "\"" + rs.getString("name") + "\"," +
                     rs.getString("category") + "," +
-                    rs.getInt("stock") + "," +
-                    rs.getDouble("price") + "," +
+                    rs.getInt("stock")       + "," +
+                    rs.getDouble("price")    + "," +
                     rs.getInt("sales_30d")
                 );
             }
@@ -146,7 +140,7 @@ public class InventoryServlet extends HttpServlet {
         }
 
         String action = req.getParameter("action");
-        String role = (String) req.getSession(false).getAttribute("role");
+        String role   = (String) req.getSession(false).getAttribute("role");
 
         try (Connection conn = DatabaseConnection.getConnection()) {
 
@@ -155,17 +149,19 @@ public class InventoryServlet extends HttpServlet {
                 String category = req.getParameter("category");
                 int    stock    = Integer.parseInt(req.getParameter("stock"));
                 double price    = Double.parseDouble(req.getParameter("price"));
+                // FIX: read sales30d from form (was missing before)
+                int    sales30d = 0;
+                try { sales30d = Integer.parseInt(req.getParameter("sales30d")); } catch (Exception ignored) {}
 
                 PreparedStatement ps = conn.prepareStatement(
-                    "INSERT INTO products (name, category, stock, price, sales_30d) VALUES (?,?,?,?,0)");
+                    "INSERT INTO products (name, category, stock, price, sales_30d) VALUES (?,?,?,?,?)");
                 ps.setString(1, name);
                 ps.setString(2, category);
                 ps.setInt(3, stock);
                 ps.setDouble(4, price);
+                ps.setInt(5, sales30d);
                 ps.executeUpdate();
-
-                // FIX #2: LRUCache has no clear() — rebuild cache by evicting all via put
-                cache = new LRUCache<>(8);
+                cache.clear();  // FIX: use proper clear()
 
             } else if ("update".equals(action)) {
                 int    id       = Integer.parseInt(req.getParameter("id"));
@@ -182,10 +178,7 @@ public class InventoryServlet extends HttpServlet {
                 ps.setDouble(4, price);
                 ps.setInt(5, id);
                 ps.executeUpdate();
-
-                // FIX #3 & #4: LRUCache has no remove(int) — evict by overwriting with null
-                // then skip null values on read, or simply rebuild the cache
-                cache.put(id, null);
+                cache.remove(id);  // FIX: use proper remove()
 
             } else if ("delete".equals(action)) {
                 if (!"ADMIN".equals(role)) {
@@ -197,9 +190,7 @@ public class InventoryServlet extends HttpServlet {
                     "DELETE FROM products WHERE id=?");
                 ps.setInt(1, id);
                 ps.executeUpdate();
-
-                // FIX #3 & #4: same — overwrite with null to invalidate cache entry
-                cache.put(id, null);
+                cache.remove(id);  // FIX: use proper remove()
             }
 
         } catch (SQLException e) {
