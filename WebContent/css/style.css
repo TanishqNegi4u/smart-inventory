@@ -1,0 +1,79 @@
+/* ── Smart Inventory Pro — Global Styles ────────────────── */
+
+:root {
+    --brand-primary: #0d6efd;
+    --brand-dark:    #1a1a2e;
+    --danger-soft:   #fff5f5;
+}
+
+body {
+    background-color: #f0f2f5;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+/* ── Navbar ─────────────────────────────────────────────── */
+.navbar {
+    box-shadow: 0 2px 8px rgba(0,0,0,.35);
+}
+
+/* ── Cards ──────────────────────────────────────────────── */
+.card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.08);
+    transition: box-shadow .2s;
+}
+.card:hover { box-shadow: 0 4px 20px rgba(0,0,0,.13); }
+.card-header {
+    background: #fff;
+    border-bottom: 1px solid #eee;
+    border-radius: 12px 12px 0 0 !important;
+    font-weight: 600;
+    padding: .85rem 1.25rem;
+}
+
+/* ── Table ──────────────────────────────────────────────── */
+.table { margin-bottom: 0; }
+.table thead th {
+    font-size: .8rem;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    padding: .65rem 1rem;
+}
+.table td { padding: .65rem 1rem; vertical-align: middle; }
+.table-hover tbody tr:hover { background-color: #f5f8ff; }
+
+/* ── Low-stock highlight ─────────────────────────────────── */
+.text-danger.fw-bold { animation: pulse 1.5s infinite; }
+@keyframes pulse {
+    0%,100% { opacity: 1; }
+    50%      { opacity: .55; }
+}
+
+/* ── Badges ─────────────────────────────────────────────── */
+.badge { font-size: .75rem; font-weight: 500; }
+
+/* ── Alerts panel ───────────────────────────────────────── */
+#trendsPanel::-webkit-scrollbar { width: 4px; }
+#trendsPanel::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+
+/* ── Login page card ────────────────────────────────────── */
+.login-card .form-control:focus {
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 .2rem rgba(13,110,253,.2);
+}
+
+/* ── Buttons ─────────────────────────────────────────────── */
+.btn { border-radius: 8px; font-weight: 500; }
+.btn-sm { padding: .3rem .6rem; font-size: .8rem; }
+
+/* ── Modal ──────────────────────────────────────────────── */
+.modal-content { border-radius: 16px; border: none; }
+.modal-header  { border-bottom: 1px solid #f0f0f0; }
+.modal-footer  { border-top: 1px solid #f0f0f0; }
+
+/* ── KPI Cards (Analytics) ──────────────────────────────── */
+.card.bg-primary h2,
+.card.bg-success h2,
+.card.bg-warning h2,
+.card.bg-info    h2 { font-size: 2.2rem; font-weight: 700; margin: 0; }
