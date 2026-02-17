@@ -1,6 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" pageEncoding="UTF-8" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt"  prefix="fmt" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <%
     if (session.getAttribute("user") == null) {
         response.sendRedirect(request.getContextPath() + "/login");
@@ -31,19 +31,41 @@
 
 <div class="container-fluid mt-4">
 
-    <%-- Alerts row --%>
+    <%-- Low Stock Alerts --%>
     <c:if test="${not empty alerts}">
-    <div class="row mb-3">
-        <div class="col">
-            <c:forEach var="alert" items="${alerts}">
-                <div class="alert alert-warning py-2 mb-1">${alert}</div>
-            </c:forEach>
-        </div>
-    </div>
+        <c:forEach var="alert" items="${alerts}">
+            <div class="alert alert-danger py-2 mb-2">${alert}</div>
+        </c:forEach>
     </c:if>
 
-    <div class="row">
+    <%-- Unauthorized error --%>
+    <c:if test="${param.error == 'unauthorized'}">
+        <div class="alert alert-danger">❌ Only ADMIN can delete products.</div>
+    </c:if>
 
+    <%-- Search & Filter Bar --%>
+    <form action="inventory" method="get" class="row g-2 mb-3">
+        <div class="col-md-5">
+            <input type="text" name="search" class="form-control"
+                   placeholder="🔍 Search products..." value="${search}">
+        </div>
+        <div class="col-md-3">
+            <select name="category" class="form-select">
+                <option value="">All Categories</option>
+                <c:forEach var="cat" items="${categories}">
+                    <option value="${cat}" ${filterCategory == cat ? 'selected' : ''}>${cat}</option>
+                </c:forEach>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">Search</button>
+        </div>
+        <div class="col-md-2">
+            <a href="inventory?export=csv" class="btn btn-success w-100">⬇ Export CSV</a>
+        </div>
+    </form>
+
+    <div class="row">
         <%-- Product Table --%>
         <div class="col-md-8">
             <div class="card shadow-sm">
@@ -58,28 +80,33 @@
                         </thead>
                         <tbody>
                             <c:forEach var="p" items="${products}">
-                            <tr>
+                            <tr class="${p.stock < 10 ? 'table-danger' : ''}">
                                 <td>${p.id}</td>
                                 <td>${p.name}</td>
                                 <td><span class="badge bg-secondary">${p.category}</span></td>
-                                <td class="${p.stock < 20 ? 'text-danger fw-bold' : p.stock < 50 ? 'text-warning' : 'text-success'}">
+                                <td class="${p.stock < 10 ? 'text-danger fw-bold' : p.stock < 50 ? 'text-warning' : 'text-success'}">
                                     ${p.stock}
-                                    <c:if test="${p.stock < 10}"> 🔴</c:if>
+                                    <c:if test="${p.stock < 10}">🔴</c:if>
                                 </td>
                                 <td>₹<fmt:formatNumber value="${p.price}" pattern="#,##0.00"/></td>
                                 <td>${p.sales30d}</td>
                                 <td>
                                     <button class="btn btn-sm btn-warning"
                                         onclick="openEdit(${p.id},'${p.name}','${p.category}',${p.stock},${p.price})">Edit</button>
+                                    <c:if test="${sessionScope.role == 'ADMIN'}">
                                     <form action="inventory" method="post" style="display:inline"
                                           onsubmit="return confirm('Delete ${p.name}?')">
                                         <input type="hidden" name="action" value="delete">
                                         <input type="hidden" name="id" value="${p.id}">
                                         <button class="btn btn-sm btn-danger">Del</button>
                                     </form>
+                                    </c:if>
                                 </td>
                             </tr>
                             </c:forEach>
+                            <c:if test="${empty products}">
+                                <tr><td colspan="7" class="text-center text-muted py-4">No products found.</td></tr>
+                            </c:if>
                         </tbody>
                     </table>
                 </div>
@@ -120,23 +147,36 @@
 <div class="modal fade" id="addModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header"><h5 class="modal-title">Add Product</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-header">
+                <h5 class="modal-title">➕ Add Product</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
             <form action="inventory" method="post">
                 <input type="hidden" name="action" value="add">
                 <div class="modal-body">
-                    <div class="mb-2"><label class="form-label">Name</label>
-                        <input type="text" name="name" class="form-control" required></div>
-                    <div class="mb-2"><label class="form-label">Category</label>
-                        <input type="text" name="category" class="form-control" required></div>
-                    <div class="mb-2"><label class="form-label">Stock</label>
-                        <input type="number" name="stock" class="form-control" min="0" required></div>
-                    <div class="mb-2"><label class="form-label">Price (₹)</label>
-                        <input type="number" name="price" class="form-control" step="0.01" min="0" required></div>
+                    <div class="mb-2"><label class="form-label">Name *</label>
+                        <input type="text" name="name" class="form-control" placeholder="e.g. iPhone 15 Pro" required></div>
+                    <div class="mb-2"><label class="form-label">Category *</label>
+                        <select name="category" class="form-select" required>
+                            <option value="">— Select —</option>
+                            <option>Electronics</option>
+                            <option>Apparel</option>
+                            <option>Footwear</option>
+                            <option>Appliances</option>
+                            <option>Sports</option>
+                            <option>Books</option>
+                            <option>Other</option>
+                        </select></div>
+                    <div class="mb-2"><label class="form-label">Stock *</label>
+                        <input type="number" name="stock" class="form-control" min="0" placeholder="0" required></div>
+                    <div class="mb-2"><label class="form-label">Price (₹) *</label>
+                        <input type="number" name="price" class="form-control" step="0.01" min="0" placeholder="0.00" required></div>
+                    <div class="mb-2"><label class="form-label">Sales Last 30 Days</label>
+                        <input type="number" name="sales30d" class="form-control" min="0" placeholder="0"></div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Add</button>
+                    <button type="submit" class="btn btn-primary">Add Product</button>
                 </div>
             </form>
         </div>
@@ -147,8 +187,10 @@
 <div class="modal fade" id="editModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header"><h5 class="modal-title">Edit Product</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-header">
+                <h5 class="modal-title">✏️ Edit Product</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
             <form action="inventory" method="post">
                 <input type="hidden" name="action" value="update">
                 <input type="hidden" name="id" id="editId">
@@ -174,17 +216,17 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="js/app.js"></script>
 <script>
-    const labels  = [<c:forEach var="p" items="${products}" varStatus="s">'${p.name}'<c:if test="${!s.last}">,</c:if></c:forEach>];
-    const stocks  = [<c:forEach var="p" items="${products}" varStatus="s">${p.stock}<c:if test="${!s.last}">,</c:if></c:forEach>];
-    const sales   = [<c:forEach var="p" items="${products}" varStatus="s">${p.sales30d}<c:if test="${!s.last}">,</c:if></c:forEach>];
+    const labels = [<c:forEach var="p" items="${products}" varStatus="s">'${p.name}'<c:if test="${!s.last}">,</c:if></c:forEach>];
+    const stocks = [<c:forEach var="p" items="${products}" varStatus="s">${p.stock}<c:if test="${!s.last}">,</c:if></c:forEach>];
+    const sales  = [<c:forEach var="p" items="${products}" varStatus="s">${p.sales30d}<c:if test="${!s.last}">,</c:if></c:forEach>];
     initStockChart('stockChart', labels, stocks, sales);
 
     function openEdit(id, name, category, stock, price) {
-        document.getElementById('editId').value       = id;
-        document.getElementById('editName').value     = name;
+        document.getElementById('editId').value = id;
+        document.getElementById('editName').value = name;
         document.getElementById('editCategory').value = category;
-        document.getElementById('editStock').value    = stock;
-        document.getElementById('editPrice').value    = price;
+        document.getElementById('editStock').value = stock;
+        document.getElementById('editPrice').value = price;
         new bootstrap.Modal(document.getElementById('editModal')).show();
     }
 </script>
