@@ -20,7 +20,6 @@ public class AuthServlet extends HttpServlet {
             if (session != null) session.invalidate();
             resp.sendRedirect(req.getContextPath() + "/login");
         } else {
-            // Already logged in → redirect to dashboard
             HttpSession session = req.getSession(false);
             if (session != null && session.getAttribute("user") != null) {
                 resp.sendRedirect(req.getContextPath() + "/inventory");
@@ -52,11 +51,16 @@ public class AuthServlet extends HttpServlet {
             if (rs.next()) {
                 String storedHash = rs.getString("password");
                 boolean valid;
+                System.out.println(">>> Login attempt: username=" + username);
+                System.out.println(">>> StoredHash=" + storedHash);
+                System.out.println(">>> PasswordEntered=" + password);
                 try {
                     valid = BCrypt.checkpw(password, storedHash);
+                    System.out.println(">>> BCrypt result: " + valid);
                 } catch (Exception e) {
-                    // Fallback plain-text comparison for dev/testing
-                    valid = password.equals(storedHash);
+                    System.err.println(">>> BCrypt error: " + e.getMessage());
+                    e.printStackTrace();
+                    valid = false;
                 }
 
                 if (valid) {
@@ -64,10 +68,12 @@ public class AuthServlet extends HttpServlet {
                     session.setAttribute("user", rs.getString("username"));
                     session.setAttribute("role", rs.getString("role"));
                     session.setAttribute("userId", rs.getInt("id"));
-                    session.setMaxInactiveInterval(30 * 60); // 30 min
+                    session.setMaxInactiveInterval(30 * 60);
                     resp.sendRedirect(req.getContextPath() + "/inventory");
                     return;
                 }
+            } else {
+                System.out.println(">>> No user found with username: " + username);
             }
         } catch (SQLException e) {
             e.printStackTrace();
