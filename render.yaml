@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: smart-inventory-pro
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: DB_URL
+        sync: false   # You'll paste this from Railway/PlanetScale
+      - key: DB_USER
+        sync: false
+      - key: DB_PASS
+        sync: false
+
+databases:
+  - name: inventory-db
+    databaseName: inventory_pro
+    user: inv_user
