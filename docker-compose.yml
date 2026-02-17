@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+
+  db:
+    image: mysql:8.0
+    container_name: inventory_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: inventory_pro
+      MYSQL_USER: inv_user
+      MYSQL_PASSWORD: inv_pass123
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./database.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    container_name: inventory_app
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      DB_URL: jdbc:mysql://db:3306/inventory_pro?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      DB_USER: inv_user
+      DB_PASS: inv_pass123
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db_data:
