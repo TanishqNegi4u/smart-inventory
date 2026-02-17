@@ -144,17 +144,44 @@ body {
     --bs-table-bg: var(--bg-elevated) !important;
     --bs-table-color: var(--text-muted) !important;
 }
+
+/* ✅ FIXED — table cells: bright primary text instead of inheriting muted */
 .table td {
     border-bottom: 1px solid var(--border) !important;
     padding: 0.72rem 1rem;
     vertical-align: middle;
     font-size: 0.85rem;
+    color: var(--text-primary) !important;   /* ✅ was missing — forces bright text */
 }
+
+/* ✅ FIXED — product name column: white + subtle glow so it "shines" */
+.table td:nth-child(2) {
+    color: #f1f5f9 !important;
+    font-weight: 500;
+    text-shadow: 0 0 12px rgba(226,232,240,0.18);
+}
+
+/* ✅ FIXED — stock column (last td): bright teal, red glow when low */
+.table td:last-child {
+    color: #e2e8f0 !important;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
 .table-hover tbody tr:hover td { background: var(--bg-hover) !important; }
 .table-danger {
     --bs-table-bg: rgba(239,68,68,0.07) !important;
     --bs-table-hover-bg: rgba(239,68,68,0.12) !important;
 }
+
+/* ✅ FIXED — low-stock row: stock number glows red */
+.table-danger td:last-child {
+    color: #fca5a5 !important;
+    font-weight: 700;
+    text-shadow: 0 0 10px rgba(239,68,68,0.55);
+    animation: pulse 1.8s ease-in-out infinite;
+}
+
 .table-responsive { overflow: hidden; border-radius: 0 0 14px 14px; }
 
 /* ── Badges ─────────────────────────────────────────────── */
@@ -169,11 +196,16 @@ body {
     color: var(--text-secondary) !important;
     border: 1px solid rgba(148,163,184,0.2);
 }
+
+/* ✅ FIXED — sales badge: vivid green that glows on dark */
 .badge.bg-success {
-    background: rgba(16,185,129,0.12) !important;
-    color: #34d399 !important;
-    border: 1px solid rgba(16,185,129,0.22);
+    background: rgba(16,185,129,0.15) !important;
+    color: #6ee7b7 !important;                          /* ✅ brighter green */
+    border: 1px solid rgba(16,185,129,0.35) !important; /* ✅ visible border */
+    text-shadow: 0 0 8px rgba(16,185,129,0.5);          /* ✅ glow */
+    box-shadow: 0 0 8px rgba(16,185,129,0.12);          /* ✅ outer glow */
 }
+
 .badge.bg-danger {
     background: rgba(239,68,68,0.12) !important;
     color: #fca5a5 !important;
