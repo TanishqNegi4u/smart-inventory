@@ -15,7 +15,13 @@ public class AnalyticsServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
-        List<Product>  products   = new ArrayList<>();
+        // FIX: add auth check — missing before, caused HTTP error for logged-out users
+        if (req.getSession(false) == null || req.getSession(false).getAttribute("user") == null) {
+            resp.sendRedirect(req.getContextPath() + "/login");
+            return;
+        }
+
+        List<Product>        products        = new ArrayList<>();
         Map<String, Integer> salesByCategory = new LinkedHashMap<>();
         Map<String, Integer> stockByCategory = new LinkedHashMap<>();
 
@@ -43,12 +49,14 @@ public class AnalyticsServlet extends HttpServlet {
             e.printStackTrace();
         }
 
-        // ── DSA: Segment Tree — top-5 sales range query ──
-        int[] sales = products.stream().mapToInt(Product::getSales30d).toArray();
+        // DSA: Segment Tree — top-5 sales range query
+        int[] sales    = products.stream().mapToInt(Product::getSales30d).toArray();
         SegmentTree st = new SegmentTree(sales);
-        int top5Sales  = (sales.length >= 5) ? st.query(0, 4) : st.query(0, sales.length - 1);
+        int top5Sales  = sales.length == 0 ? 0
+                       : (sales.length >= 5) ? st.query(0, 4)
+                       : st.query(0, sales.length - 1);
 
-        // ── DSA: Sliding Window trends ────────────────────
+        // DSA: Sliding Window trends — use detectTrends() with correct signature
         List<SlidingWindow.TrendResult> trends =
             SlidingWindow.detectTrends(sales, SlidingWindow.DEFAULT_WINDOW, 100, 30);
 
