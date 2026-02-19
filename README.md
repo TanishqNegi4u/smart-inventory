@@ -2,40 +2,16 @@
 
 <div align="center">
 
-
-
 ![Java](https://img.shields.io/badge/Java-11-orange?style=for-the-badge&logo=java)
-
-
-
-
 ![MySQL](https://img.shields.io/badge/MySQL-8.0-blue?style=for-the-badge&logo=mysql)
-
-
-
-
 ![Tomcat](https://img.shields.io/badge/Tomcat-9.0-yellow?style=for-the-badge&logo=apachetomcat)
-
-
-
-
 ![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker)
-
-
-
-
 ![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-purple?style=for-the-badge&logo=bootstrap)
-
-
-
-
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
-
-
 
 **A DSA-powered Inventory Management System built with Java EE, MySQL & Bootstrap 5**
 
-[🚀 Live Demo](#) • [📖 Setup Guide](#-local-setup) • [☁️ Deploy](#️-deploy-to-cloud-free)
+[🚀 Live Demo](https://smart-inventory-pro-production-d548.up.railway.app/) • [📖 Setup Guide](#-local-setup) • [☁️ Deploy](#️-deploy-to-cloud)
 
 </div>
 
@@ -56,9 +32,11 @@
 
 ## 🧠 DSA Implementations
 
+> What makes this project stand out — real Data Structures & Algorithms applied to solve real backend problems.
+
 | Algorithm | File | Use Case | Complexity |
 |-----------|------|----------|------------|
-| **LRU Cache** | `LRUCache.java` | Cache product lookups, avoid DB hits | O(1) get/put |
+| **LRU Cache** | `LRUCache.java` | Cache product lookups, avoid repeated DB hits | O(1) get/put |
 | **Segment Tree** | `SegmentTree.java` | Range-sum stock queries & low-stock alerts | O(log n) query |
 | **Sliding Window** | `SlidingWindow.java` | 7-day moving average demand detection | O(n) |
 | **Fenwick Tree** | `app.js` | Frontend prefix-sum stock monitoring | O(log n) |
@@ -79,6 +57,8 @@
 ---
 
 ## 📁 Project Structure
+
+```
 smart-inventory-pro/
 ├── WebContent/
 │   ├── index.jsp
@@ -107,9 +87,12 @@ smart-inventory-pro/
 ├── railway.toml
 ├── render.yaml
 └── .gitignore
+```
+
 ---
 
 ## 🔧 Prerequisites
+
 - Java 11+
 - Apache Tomcat 9.x
 - MySQL 8.x
@@ -119,27 +102,99 @@ smart-inventory-pro/
 
 ## 🚀 Local Setup
 
-### 1. Database
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/tanishqnegi/smart-inventory-pro.git
+cd smart-inventory-pro
+```
+
+### 2. Set Up the Database
+
 ```sql
 mysql -u root -p < database.sql
-2. Build WAR
+```
+
+### 3. Build the WAR File
+
+```bash
 mvn clean package
-3. Deploy to Tomcat
+```
+
+### 4. Deploy to Tomcat
+
+```bash
 cp target/smart-inventory-pro-1.0.war $TOMCAT_HOME/webapps/
-Default credentials:
+```
+
+Then open: `http://localhost:8080/smart-inventory-pro`
+
+### Default Login Credentials
+
 | Username | Password | Role |
 |----------|----------|------|
 | admin | admin123 | ADMIN |
 | manager | admin123 | MANAGER |
-☁️ Cloud Deployment
-Environment Variables
+
+---
+
+## 🐳 Run with Docker
+
+```bash
+# Build and run with Docker Compose (recommended)
+docker-compose up --build
+
+# OR manually
+docker build -t smart-inventory-pro .
+docker run -p 8080:8080 smart-inventory-pro
+```
+
+---
+
+## ☁️ Deploy to Cloud
+
+This project includes ready-to-use config files for both Railway and Render.
+
+### Environment Variables (set these in your cloud dashboard)
+
+```env
 DB_URL  = jdbc:mysql://your-host:3306/inventory_pro
 DB_USER = your_db_username
 DB_PASS = your_db_password
-🔐 Security Notes
-Passwords stored as BCrypt hashes
-Session-based auth with 30-minute timeout
-Prepared statements for all SQL queries
-4. Tap **Commit changes** ✅
+```
+
+| Platform | Config File | Steps |
+|----------|-------------|-------|
+| Railway | `railway.toml` | Connect repo → set env vars → deploy |
+| Render | `render.yaml` | Connect repo → set env vars → deploy |
 
 ---
+
+## 🔐 Security
+
+- Passwords stored as **BCrypt hashes** — never plain text
+- **Session-based authentication** with 30-minute timeout
+- **Prepared statements** for all SQL queries — protected against SQL injection
+
+---
+
+## 👨‍💻 Author
+
+**Tanishq Negi**
+- 📧 [tanishqn8@gmail.com](mailto:tanishqn8@gmail.com)
+- 🌍 Saharanpur, Uttar Pradesh, India
+- 🎓 MCA Student — Uttaranchal University, Dehradun (2025–2027)
+
+---
+
+## 📄 License
+
+This project is open source and available under the [MIT License](LICENSE).
+
+---
+
+<div align="center">
+
+⭐ **Star this repo if you found it useful — it really helps!** ⭐
+
+</div>
